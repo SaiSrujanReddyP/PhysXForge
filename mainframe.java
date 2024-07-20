@@ -294,22 +294,26 @@ public class mainframe extends JFrame implements ActionListener{
         JTextField A = new JTextField("0.01");
         JTextField B = new JTextField("10");
         JTextField C = new JTextField("9.8");
-        
+        JTextField D = new JTextField("1.81e-5");
         setWorldValues()
         {
             addtoframe.addActionListener(this);
             JLabel Alabel = new JLabel("time increment of the world");
             JLabel Blabel = new JLabel("simulation duration");
             JLabel Clabel = new JLabel("gravity of world");
+            JLabel Dlabel = new JLabel("drag coefficient");
             
 
-            this.setLayout(new GridLayout(4,2,10,10));
+            this.setLayout(new GridLayout(5,2,10,10));
             this.add(Alabel);
             this.add(A);
             this.add(Blabel);
             this.add(B);
             this.add(Clabel);
             this.add(C);
+            this.add(Dlabel);
+            this.add(D);
+
 
             this.add(addtoframe);
             this.setTitle("add new surface");
@@ -325,10 +329,12 @@ public class mainframe extends JFrame implements ActionListener{
                 double inctime = 0.1;
                 double maxtime = 10;
                 double grav = -9.8;
+                double eta = 1.81e-5;
                 try{
                     inctime = Double.parseDouble(A.getText());
                     maxtime = Double.parseDouble(B.getText());
                     grav = Double.parseDouble(C.getText());
+                    eta = Double.parseDouble(D.getText());
 
                     if(inctime < 0.01)
                         throw new IllegalArgumentException("increment time set too low");
@@ -349,8 +355,22 @@ public class mainframe extends JFrame implements ActionListener{
                 obj.setIncTime(inctime);
                 obj.setMaxTime(maxtime*10);
                 obj.setGravity(grav);
+                world.eta = eta;
             }
             this.dispose();
+        }
+    }
+    private class show_started extends Thread{
+        public void run()
+        {
+            JOptionPane.showMessageDialog(null,"rendering simulation ... ", "please wait", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    private class do_calc extends Thread{
+        public void run()
+        {
+            obj.run();
+            useful.setText("rendering complete");
         }
     }
 
@@ -373,7 +393,8 @@ public class mainframe extends JFrame implements ActionListener{
         }
         if(e.getSource() == renderSim)
         {
-            JOptionPane.showMessageDialog(null,"rendering simulation ... ", "please wait", JOptionPane.INFORMATION_MESSAGE);
+            show_started thr1 = new show_started();
+            thr1.start();
 
             renderSim.setEnabled(false);
             if(defaultSurface.isSelected())
@@ -388,8 +409,9 @@ public class mainframe extends JFrame implements ActionListener{
                 world.addSurface(new point(0,0), new point(500,0));
             }
             ///* 
-            obj.run();
-            useful.setText("rendering complete");
+            do_calc thr2 = new do_calc();
+            thr2.start();
+            
             newCircle.setEnabled(false);
             newLine.setEnabled(false);
             newObject.setEnabled(false);
