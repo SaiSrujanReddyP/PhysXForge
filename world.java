@@ -13,6 +13,8 @@ public class world{
     static ArrayList<point> initpos = new ArrayList<point>();
     static ArrayList<vector> initvelocities = new ArrayList<vector>();
     static vector g = new vector(0, -9.8);        //gravity;
+    static double gravity_G = 6.674E-11;            //gravity constant
+    static double eta = 1.81e-5;                     //drag force constant for air
     Scanner sc;
 
     public world()
@@ -124,6 +126,46 @@ public class world{
         postions.clear();
     }
 
+    private class lineToBall extends Thread{
+        int i;
+        lineToBall(int i){
+            this.i = i;
+        }
+        public void run()
+        {
+            for(int j = 0; j < lines.size(); j++){
+                lines.get(j).interactWith(balls.get(i));
+            }
+        }
+    }
+    private class circleToBall extends Thread{
+        int i;
+        circleToBall(int i){
+            this.i = i;
+        }
+        public void run()
+        {
+            for(int j = 0; j < circles.size(); j++){
+                circles.get(j).interactWith(balls.get(i));
+            }
+        }
+    }
+    private class BallToBall extends Thread{
+        int i;
+        BallToBall(int i){
+            this.i = i;
+        }
+        public void run()
+        {
+            for(int j = 0; j < balls.size(); j++){
+                if(j == i)
+                {
+                    continue;
+                }
+                balls.get(i).checkCollisionAndSetVelocity(balls.get(j));
+            }
+        }
+    }
     public void run()       //render the simulation
     {       
         int k = 0;
@@ -132,19 +174,36 @@ public class world{
             point[] tmp = new point[balls.size()];
             for(int i = 0; i < balls.size(); i++)
             {
-                for(int j = 0; j < lines.size(); j++){
-                    lines.get(j).interactWith(balls.get(i));
+                // for(int j = 0; j < lines.size(); j++){
+                //     lines.get(j).interactWith(balls.get(i));
+                // }
+                // for(int j = 0; j < circles.size(); j++){
+                //     circles.get(j).interactWith(balls.get(i));
+                // }
+                // for(int j = 0; j < balls.size(); j++){
+                //     if(j == i)
+                //     {
+                //         continue;
+                //     }
+                //     balls.get(i).checkCollisionAndSetVelocity(balls.get(j));
+                // }
+                lineToBall thread1 = new lineToBall(i);
+                circleToBall thread2 = new circleToBall(i);
+                BallToBall thread3 = new BallToBall(i);
+                thread1.start();
+                thread2.start();
+                thread3.start();
+                try{
+                    thread1.join();
+                    thread2.join();
+                    thread3.join();
                 }
-                for(int j = 0; j < circles.size(); j++){
-                    circles.get(j).interactWith(balls.get(i));
+                catch(InterruptedException e)
+                {
+
                 }
-                for(int j = 0; j < balls.size(); j++){
-                    if(j == i)
-                    {
-                        continue;
-                    }
-                    balls.get(i).checkCollisionAndSetVelocity(balls.get(j));
-                }
+
+
                 balls.get(i).updateVelocity(time_increment);
                 System.out.println("current velocity of ball " + i + " = " + balls.get(i).velocity.x + ", " + balls.get(i).velocity.y);
                 tmp[i] = new point(balls.get(i).updatePosition(time_increment));
