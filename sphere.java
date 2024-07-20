@@ -5,6 +5,7 @@ public class sphere extends moveableobject{
     {
         super();
         c = new circle(new point(0,0),1);
+        objGravity = new vector();
     }
     
     sphere(point p, double radius, double mass)
@@ -12,6 +13,7 @@ public class sphere extends moveableobject{
         super();
         this.c = new circle(new point(p), radius);
         this.density = mass / ((4 / (double)3) * 3.1415 *radius * radius * radius);
+        objGravity = new vector();
     }
 
     public void setCenter(point p)
@@ -20,23 +22,26 @@ public class sphere extends moveableobject{
     }
     public void updateVelocity(double time)         //time is the time interval of the world
     {
-        double eta = 1.81e-5;
         vector dragForce = new vector();
-        double drag = 6 * 3.1415 * eta * this.c.radius * this.velocity.x;
-        dragForce.setVector(drag,0);
-        drag = 6 * 3.1415 * eta * this.c.radius * this.velocity.y;
-        dragForce.setVector(dragForce.x, drag);
+        double drag = 6 * 3.1415 * world.eta * this.c.radius * this.velocity.x;
+        //dragForce.setVector(-drag,0);
+        dragForce.x = -drag;
+        drag = 6 * 3.1415 * world.eta * this.c.radius * this.velocity.y;
+        //dragForce.setVector(dragForce.x, -drag);
+        dragForce.y = -drag;
         vector netForce = new vector();
         vector gravity = new vector(world.g.x * mass, world.g.y * mass);
 
         //added drag Force
         netForce.add(dragForce);
         netForce.add(gravity);
+        netForce.add(objGravity);
         vector netAccel = new vector();
         netAccel.setVector(netForce.x / mass, netForce.y / mass);
         
         // calculate final velocity
         this.velocity.calcVelocity(this.velocity, netAccel, time);
+        objGravity.setVector(0,0);
         
     }
     public point updatePosition(double time)
@@ -66,7 +71,12 @@ public class sphere extends moveableobject{
             //System.out.println("new velocities => " + this.velocity.x + ", " + this.velocity.y + " and " + s1.velocity.x + " , " + s1.velocity.y);
         }
         else{
-            //System.out.println(";'no collision");
+            //effect of gravity
+            double gforce = (world.gravity_G * this.mass * s1.mass)/(this.c.center.distanceTo(s1.c.center));
+            double angle = Math.atan2(this.c.center.y - s1.c.center.y, this.c.center.x - s1.c.center.x);
+            System.out.println(gforce);
+            objGravity.x -= gforce*Math.cos(angle);
+            objGravity.y -= gforce*Math.sin(angle);
         }
     }
 }
