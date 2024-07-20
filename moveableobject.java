@@ -3,6 +3,8 @@ public abstract class moveableobject{
     public point position;
     protected double mass;
     protected double density;
+    protected vector objGravity;
+    protected vector gravity;
     moveableobject()
     {
         density = 1;   //mass is defined in KG
