@@ -10,6 +10,11 @@ public class vector{
         this.x = x;
         this.y = y;
     }
+    vector(point p1)
+    {
+        this.x = p1.x;
+        this.y = p1.y;
+    }
     public void add(vector v1)
     {
         x += v1.x;
